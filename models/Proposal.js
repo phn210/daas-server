@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const ProposalSchema = new Schema({
+    _id: {type: String},
     chainId: {type: String},
     governor: {type: String},
     id: {type: String},
@@ -13,7 +14,7 @@ const ProposalSchema = new Schema({
     states: [
         {
             name: {type: String},
-            ts: {type: String | Number}
+            ts: {type: Number}
         }
     ],
     title: {type: String}

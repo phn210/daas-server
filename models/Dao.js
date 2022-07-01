@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const DaoSchema = new Schema({
+    _id: {type: String},
     chainId: {type: String},
     id: {type: Number},
     infoHash: {type: String},

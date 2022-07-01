@@ -9,6 +9,6 @@ router.get('/test', (req, res) => {
 
 router.get('/daos/', EventController.findByDao);
 
-// router.post('/create', EventController.create);
+router.post('/', EventController.registry);
 
 module.exports = router;

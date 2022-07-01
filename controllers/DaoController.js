@@ -5,8 +5,11 @@ const IpfsController = require('../controllers/IpfsController');
 
 const Dao = require('../models/Dao');
 
+const utils = require('../utils')
+
 exports.update = (data) => {
     const dao = {
+        _id: ethers.utils.hexConcat([utils.toHex(data.chainId, 10), utils.toHex(Number(data.id), 10)]),
         chainId: data.chainId,
         id: data.id,
         infoHash: data.infoHash,
@@ -21,16 +24,13 @@ exports.update = (data) => {
         websiteUrl: data.websiteUrl
     }
 
-    Dao.findOneAndUpdate(
-        {
-            chainId: data.chainId,
-            id: data.id,
-        },
+    Dao.findByIdAndUpdate(
+        dao._id,
         dao,
         {upsert: true, new: true}
     )
     .then(data => {
-        console.log("DAO created.");
+        console.log(`DAO updated ${dao._id}`);
         return data;
     })
     .catch(err => {

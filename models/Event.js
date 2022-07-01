@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const EventSchema = new Schema({
+    _id: {type: String},
     name: {type: String},
     chainId: {type: String},
     blockNumber: {type: Number},

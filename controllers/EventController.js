@@ -9,7 +9,9 @@ const ProposalController = require('./ProposalController');
 const Event = require('../models/Event');
 const EventRegistry = require('../models/EventRegistry');
 
+const utils = require('../utils');
 const ipfsUtils = require('../utils/ipfs');
+const { mongo, default: mongoose } = require('mongoose');
 
 var providers = []
 var contracts = []
@@ -28,20 +30,32 @@ function getChainInfo(chainId) {
     return config.chains.filter(e => e["chainId"] == chainId)[0]
 }
 
-function createEventListener(eventRegistry) {
-    let contract = new ethers.Contract(
-        eventRegistry.address,
-        config[eventRegistry.chainId][String(eventRegistry.contract).toLowerCase()].interface,
-        providers[eventRegistry.chainId]
-    )
-    let filter = contract.filters[eventRegistry.name]();
-    let listener = specialEventListeners[eventRegistry.name] ?? eventListener
-    contract.provider.on(filter, async (event) => {
-        event["chainId"] = eventRegistry.chainId;
-        event["contract"] = eventRegistry.contract;
-        event = await logEvent(event);
-        listener(event)
-    });
+async function createEventListener(eventRegistry) {
+    try {
+        let contract = new ethers.Contract(
+            eventRegistry.address,
+            config[eventRegistry.chainId][String(eventRegistry.contract).toLowerCase()].interface,
+            providers[eventRegistry.chainId]
+        )
+        let filter = contract.filters[eventRegistry.name]();
+        let listener = specialEventListeners[eventRegistry.name] ?? eventListener
+        contract.provider.on(filter, async (event) => {
+            const save_event = {}
+            Object.assign(save_event, event)
+            save_event.chainId = eventRegistry.chainId;
+            save_event.contract = eventRegistry.contract;
+            save_event.blockTimestamp = (await providers[save_event.chainId].getBlock(save_event.blockNumber)).timestamp;
+            const logData = await logEvent(save_event);
+            Object.assign(save_event, logData == false ? {} : logData);
+            delete save_event.data;
+            delete save_event.topics;
+            listener(save_event)
+        });
+        return true;
+    } catch (err) {
+        console.error(err);
+        return false;
+    }
 }
 
 const init = () => {
@@ -51,7 +65,7 @@ const init = () => {
         contracts[e] = [];
         Object.keys(config[e]).filter(elm => elm != "").map(elm => contracts[e][elm] = new ethers.Contract(config[e][elm].address, config[e][elm].interface, providers[e]));
 
-        exports.registry({
+        registry({
             contract: 'DAOFactory',
             address: config[e]['daofactory'].address,
             name: 'DAOCreated',
@@ -61,7 +75,7 @@ const init = () => {
 }
 
 function eventListener(event) {
-    exports.create(event);
+    createEvent(event);
 }
 
 async function daoCreatedListener(event) {
@@ -74,28 +88,29 @@ async function daoCreatedListener(event) {
         isRetired: event.dao_isRetired,
         isBlacklisted: event.dao_isBlacklisted
     }
-
-    const daoInfo = (await IpfsController.getFile(ipfsUtils.getIpfsHash(dao.infoHash))).data
+    const daoInfo = {}
     try {
+        Object.assign(daoInfo, (await IpfsController.getFile(ipfsUtils.getIpfsHash(dao.infoHash))).data)
         Object.assign(daoInfo, dao)
     } catch (err) {
         console.error(err)
     }
-    DaoController.update(daoInfo)
 
-    Object.keys(contracts[event.chainId]['governor'].interface.events)
+    DaoController.update(daoInfo)
+    Object.keys(contracts[dao.chainId]['governor'].interface.events)
     .filter(e => ![
         // "VoteCast(address,uint256,uint8,uint256,string)", 
         "Initialized(uint8)"
     ].includes(e))
     .map(e => {
-        exports.registry({
+        registry({
             contract: 'Governor',
             address: dao.governor,
             name: contracts[event.chainId]['governor'].interface.events[e]?.name,
             chainId: event.chainId
         })
     })
+
     const governor = new ethers.Contract(
         dao.governor,
         config[dao.chainId]['governor'].interface,
@@ -103,7 +118,6 @@ async function daoCreatedListener(event) {
     )
     const timelock = await governor.timelock()
 
-    console.log(Object.keys(contracts[event.chainId]['timelock'].interface.events));
     Object.keys(contracts[event.chainId]['timelock'].interface.events)
     .filter(e => ![
         // "TransactionExecuted(bytes32,address,uint256,string,bytes,uint256)", 
@@ -112,7 +126,7 @@ async function daoCreatedListener(event) {
         "Initialized(uint8)"
     ].includes(e))
     .map(e => {
-        exports.registry({
+        registry({
             contract: 'Timelock',
             address: timelock,
             name: contracts[event.chainId]['timelock'].interface.events[e]?.name,
@@ -120,70 +134,90 @@ async function daoCreatedListener(event) {
         })
     })
 
-    eventListener(event)
+    await eventListener(event);
 }
 
-function daoUpdatedListener() {
+async function daoUpdatedListener(event) {
 
+    await eventListener(event);
 }
 
-function adminChangedListener() {
+async function adminChangedListener(event) {
 
+    await eventListener(event);
 }
 
-function newTimelockListener() {
+async function newTimelockListener(event) {
 
+    await eventListener(event);
 }
 
 async function proposalCreatedListener(event) {
     const proposal = {
         chainId: event.chainId,
+        governor: event.address,
         id: event.proposalId,
         index: event.index,
+        proposer: event.proposer,
+        startBlock: event.startBlock,
+        endBlock: event.endBlock,
         descriptionHash: event.descriptionHash,
-        proposer: event.proposer
+        states: [
+            {
+                name: 'Created',
+                ts: event.blockTimestamp
+            }
+        ]
     }
 
-    const proposalInfo = (await IpfsController.getFile(ipfsUtils.getIpfsHash(proposal.descriptionHash))).data
+    const proposalInfo = {}
     try {
+        Object.assign(proposalInfo, (await IpfsController.getFile(ipfsUtils.getIpfsHash(proposal.descriptionHash))).data);
         Object.assign(proposalInfo, proposal)
     } catch (err) {
         console.error(err)
     }
+    console.log(proposalInfo)
     ProposalController.update(proposalInfo)
 
-    eventListener(event)
+    await eventListener(event);
 }
 
-function proposalUpdatedListener() {
+async function proposalUpdatedListener(event) {
 
+    await eventListener(event);
 }
 
 const getInfo = (obj, key, value) => {
     if (Array.isArray(value)) {
-        keys = Object.keys(value)
-        values = Object.values(value)
-        indexes = [...Array(keys.length).keys()].splice(keys.length/2);
-        indexes.map(e => getInfo(obj, key == '' ? keys[e] : key+'_'+keys[e], values[e]))
+        let keys = Object.keys(value)
+        let stringKey = keys.filter(k => k.match(/[a-zA-Z]/) != null).length > 0
+        let values = Object.values(value)
+        let indexes = stringKey ? [...Array(keys.length).keys()].splice(keys.length/2) : [...Array(keys.length).keys()];
+
+        indexes = indexes.map(e => {
+            return getInfo(obj, key === '' ? keys[e] : key+'_'+keys[e], values[e])
+        })
+
     } else {
         obj[key] = value.toString();
     }
 }
 
 const logEvent = async (event) => {
-    save_event = {};
-    save_event["blockNumber"] = event["blockNumber"]
-    save_event["blockTimestamp"] = (await providers[event["chainId"]].getBlock(event["blockNumber"])).timestamp
-    save_event["transactionHash"] = event["transactionHash"]
-    save_event["chainId"] = event["chainId"]
-    save_event["address"] = event["address"]
-    event = new ethers.utils.Interface(config[event["chainId"]][String(event["contract"]).toLowerCase()].interface).parseLog(event);
-    save_event["name"] = event["name"]
-    getInfo(save_event, '', event.args)
-    return save_event;
+    try {
+        save_event = {};
+        event = new ethers.utils.Interface(config[event["chainId"]][String(event["contract"]).toLowerCase()].interface).parseLog(event);
+        save_event["name"] = event["name"]
+        getInfo(save_event, '', event.args)
+        return save_event;
+    } catch (err) {
+        console.error(err);
+        return false;
+    }
 }
 
-exports.registry = (data) => {
+const registry = (data) => {
     let eventRegistry = {
         contract: data.contract,
         address: data.address,
@@ -191,59 +225,59 @@ exports.registry = (data) => {
         chainId: data.chainId
     }
 
-    EventRegistry.findOneAndUpdate(
+    EventRegistry.updateOne(
         eventRegistry,
         eventRegistry,
         {upsert: true, new: true}
     )
     .then(data => {
-        // res.status(200).send(data)
-        console.log('Event registried.')
-        createEventListener(eventRegistry);
-        return true;
+        if (createEventListener(eventRegistry)) return true;
+        else return false;
     }).catch(err => {
-        // res.status(500).send({
-        //     message:
-        //     err.message || "Some error occurred while creating the Event."
-        // });
         console.error(err)
         return false;
     })
 }
 
-exports.create = (data) => {
-    // console.log(eventData);
-    // const event = new Event(eventData)
-    Event.findOneAndUpdate(
-        {
-            transactionHash: data['transactionHash'],
-            name: data['name']
-        },
+const createEvent = (data) => {
+    data._id = ethers.utils.hexConcat([
+        utils.toHex(data.chainId, 10),
+        data.address,
+        utils.toHex(data.logIndex, 4),
+        data.transactionHash
+    ])
+    Event.findByIdAndUpdate(
+        data._id,
         data,
         {upsert: true, new: true}
     )
     .then(data => {
-        // res.status(200).send(data)
-        console.log('Event created.');
+        // console.log(`Event created ${data._id}`);
         return true;
     }).catch(err => {
-        // res.status(500).send({
-        //     message:
-        //     err.message || "Some error occurred while creating the Event."
-        // });
+
         console.error(err)
         return false;
     })
 };
-  
-exports.findOne = (query) => {
-    Event.findOne(query)
-    .then(event => { return event; } )
-    .catch(err => {
-        console.err(err);
-        return false;
+
+exports.registry = (req, res) => {
+    registry({
+        contract: req.body.contract,
+        address: req.body.address,
+        name: req.body.name,
+        chainId: req.body.chainId
     })
-};
+    .then(res => {
+        res.status(200).send(data)
+    })
+    .catch(err => {
+        res.status(500).send({
+            message:
+            err.message
+        });
+    })
+}
 
 exports.findByDao = (req, res) => {
     const query = {
