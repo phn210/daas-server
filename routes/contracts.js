@@ -7,8 +7,6 @@ router.get('/test', (req, res) => {
     res.json({message: 'Test is OK!'});
 })
 
-router.get('/', DaoController.findAll);
-router.get('/:daoId', DaoController.findOne);
-
+router.get('/:daoId', DaoController.findContractsByDAO);
 
 module.exports = router;

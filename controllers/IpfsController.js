@@ -3,8 +3,8 @@ require("dotenv").config();
 
 const IPFS_GET_URL = process.env.IPFS_GET_URL
 const IPFS_SET_URL = process.env.IPFS_SET_URL
-const INFURA_PROJECT_ID = process.env.INFURA_PROJECT_ID
-const INFURA_PROJECT_SECRET = process.env.INFURA_PROJECT_SECRET
+const INFURA_PROJECT_ID = process.env.INFURA_IPFS_ID
+const INFURA_PROJECT_SECRET = process.env.INFURA_IPFS_SECRET
 
 // exports.add = (req, res) => {
 //     addFile(req.body)

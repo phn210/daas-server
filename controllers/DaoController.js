@@ -2,16 +2,37 @@ const ethers = require('ethers')
 const mongoose = require('mongoose');
 
 const IpfsController = require('../controllers/IpfsController');
+const ContractController = require('../controllers/ContractController');
 
 const Dao = require('../models/Dao');
+const Following = require('../models/Following');
 
-const utils = require('../utils')
+const { CONSTANTS } = require('../config');
+const utils = require('../utils');
+
+exports.resolveDaoId = (daoId) => {
+    let obj = {};
+    let i = 0;
+    try {
+        if (daoId.length != CONSTANTS.PADDING.CHAINID*2 + CONSTANTS.PADDING.DAOINDEX*2 + 2)
+            throw {message: "Invalid daoId's length"};
+        obj.chainId = Number(ethers.utils.hexDataSlice(daoId, i, i+= CONSTANTS.PADDING.CHAINID));
+        obj.index = Number(ethers.utils.hexDataSlice(daoId, i, i+= CONSTANTS.PADDING.DAOINDEX));    
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+    return obj;
+}
 
 exports.update = (data) => {
     const dao = {
-        _id: ethers.utils.hexConcat([utils.toHex(data.chainId, 10), utils.toHex(Number(data.id), 10)]),
+        _id: ethers.utils.hexConcat([
+            utils.toHex(Number(data.chainId), CONSTANTS.PADDING.CHAINID),
+            utils.toHex(Number(data.id), CONSTANTS.PADDING.DAOINDEX)
+        ]),
         chainId: data.chainId,
-        id: data.id,
+        index: data.id,
         infoHash: data.infoHash,
         proxyAdmin: data.proxyAdmin,
         governor: data.governor,
@@ -19,9 +40,7 @@ exports.update = (data) => {
         isBlacklisted: data.isBlacklisted,
         name: data.name,
         shortDescription: data.shortDescription,
-        description: data.description,
-        logoUrl: data.logoUrl,
-        websiteUrl: data.websiteUrl
+        logoUrl: data.logoUrl
     }
 
     Dao.findByIdAndUpdate(
@@ -34,8 +53,7 @@ exports.update = (data) => {
         return data;
     })
     .catch(err => {
-        console.error(err);
-        return err;
+        throw err;
     })
 }
 
@@ -53,8 +71,29 @@ exports.findAll = (req, res) => {
 }
 
 exports.findOne = (req, res) => {
-    if (req.params.daoId < 0) return false;
-    Dao.findOne({id: req.params.daoId})
+    try {
+        exports.resolveDaoId(req.params.daoId);
+    } catch (err) {
+        res.status(500).send({
+            message: err.message
+        });
+        return 0;
+    }
+
+    Dao.findById(req.params.daoId)
+    .then(data => {
+        res.status(200).send(data)
+    })
+    .catch(err => {
+        res.status(500).send({
+            message: err.message
+        });
+        return 0;
+    })
+}
+
+exports.findContractsByDAO = (req, res) => {
+    exports.getContracts(req.params.daoId)
     .then(data => {
         res.status(200).send(data)
     })
@@ -66,23 +105,12 @@ exports.findOne = (req, res) => {
     })
 }
 
-exports.findMany = (req, res) => {
-    const query = Object.keys(req.params).reduce(
-        (o, e) => Object.assign(o, {[e]: req.params[e]}),
-        {}
-    )
-    Dao.find(query)
-    .then(data => {
-        res.status(200).send(data)
-    })
-    .catch(err => {
-        res.status(500).send({
-            message:
-            err.message
-        });
-    })
-}
-
-exports.findAllInfo = (req, res) => {
-
+exports.getContracts = async (daoId) => {
+    try {
+        daoId = exports.resolveDaoId(daoId);
+        return await ContractController.getContracts(daoId);
+    } catch(err) {
+        console.error(err)
+        throw(err);
+    }
 }

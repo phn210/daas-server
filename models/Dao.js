@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const DaoSchema = new Schema({
     _id: {type: String},
     chainId: {type: String},
-    id: {type: Number},
+    index: {type: Number},
     infoHash: {type: String},
     proxyAdmin: {type: String},
     governor: {type: String},
@@ -12,9 +12,7 @@ const DaoSchema = new Schema({
     isBlacklisted: {type: Boolean},
     name: {type: String},
     shortDescription: {type: String},
-    description: {type: String},
-    logoUrl: {type: String},
-    websiteUrl: {type: String}
+    logoUrl: {type: String}
 }, {
     strict: false,
     timestamps: true

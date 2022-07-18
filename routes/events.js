@@ -7,8 +7,7 @@ router.get('/test', (req, res) => {
     res.json({message: 'Test is ok'});
 })
 
-router.get('/daos/', EventController.findByDao);
-
+router.get('/:daoId', EventController.findByDao);
 router.post('/', EventController.registry);
 
 module.exports = router;

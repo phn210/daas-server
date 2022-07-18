@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const EventRegistrySchema = new Schema({
+    _id: {type: String},
     chainId: {type: String},
     contract: {type: String},
     address: {type: String},

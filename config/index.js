@@ -2,6 +2,7 @@ exports.allowedChains = [
     31337
 ]
 
-exports.chains = require('./chains.js')
+exports.chains = require('./allowedChains.js')
+exports.CONSTANTS = require('./constants');
 
 this.allowedChains.map(e => exports[[e]] = require(`./${e}.js`))
