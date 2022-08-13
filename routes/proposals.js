@@ -8,5 +8,6 @@ router.get('/test', (req, res) => {
 })
 
 router.get('/:daoId', ProposalController.findByDAO);
+router.get('/details/:proposalId', ProposalController.findOne);
 
 module.exports = router;

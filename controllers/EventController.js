@@ -24,6 +24,19 @@ const specialEventListeners = {
     'ProposalCancelled': proposalUpdatedListener
 }
 
+exports.testEventListening = () => {
+    ContractController.providers[31337].map(provider => {
+        console.log('test', provider.listenerCount('DAOCreated'))
+    });
+}
+
+exports.testListeners = (req, res) => {
+    const contract = ContractController.contracts[97]["governor"].attach("0x2Ef6DbFD41CD78C796B782a830BCB4c8A90bbC2A");
+    const filter = contract.filters["ProposalCreated"]();
+    const data = ContractController.providers[97].map(provider => {return provider.listenerCount(filter)})
+    res.status(200).send({'data': data})
+}
+
 const getInfo = (obj, key, value) => {
     if (Array.isArray(value)) {
         let keys = Object.keys(value)
@@ -71,7 +84,7 @@ const createEventListener = async (eventRegistry) => {
                 delete save_event.data;
                 delete save_event.topics;
                 delete save_event.removed;
-                await Promise.all([listener(save_event), eventListener(save_event)]);
+                return await Promise.all([listener(save_event), eventListener(save_event)]);
             });
             return ;
         });
@@ -181,6 +194,23 @@ async function proposalUpdatedListener(event) {
 
 }
 
+exports.resolveEventId = (eventId) => {
+    const obj = {};
+    let i = 0;
+    try {
+        if (eventId.length != CONSTANTS.PADDING.CHAINID*2 + CONSTANTS.PADDING.ADDRESS*2 + CONSTANTS.PADDING.TXHASH*2 + CONSTANTS.PADDING.LOGINDEX*2+2)
+            throw {message: 'Invalid eventId length'};
+        obj.chainId = Number(ethers.utils.hexDataSlice(eventId, i, i+= CONSTANTS.PADDING.CHAINID));
+        obj.address = ethers.utils.hexDataSlice(eventId, i, i+= CONSTANTS.PADDING.ADDRESS);
+        obj.transactionHash = ethers.utils.hexDataSlice(eventId, i, i+= CONSTANTS.PADDING.TXHASH);
+        obj.logIndex = ethers.utils.hexDataSlice(eventId, i, i+= CONSTANTS.PADDING.LOGINDEX);    
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+    return obj;
+}
+
 const createEvent = (data) => {
     try {
         data._id = ethers.utils.hexConcat([
@@ -206,12 +236,33 @@ const createEvent = (data) => {
     })
 };
 
+exports.findOne = async (req, res) => {
+    try {
+        exports.resolveEventId(req.params.eventId);
+    } catch (err) {
+        res.status(500).send({
+            message: err.message
+        });
+        return 0;
+    }
+
+    Event.findById(req.params.eventId)
+    .then(data => {
+        res.status(200).send({'data': data})
+    })
+    .catch(err => {
+        res.status(500).send({
+            message: err.message
+        });
+        return 0;
+    })
+}
+
 exports.findByDao = async (req, res) => {
     const dao = {}, query = {};
     try {
         Object.assign(dao, DaoController.resolveDaoId(req.params.daoId));
         dao.contracts = await DaoController.getContracts(req.params.daoId);
-
         Object.assign(query, {
             chainId: dao.chainId,
             address: { $in: Object.values(dao.contracts).flat() },
@@ -226,12 +277,11 @@ exports.findByDao = async (req, res) => {
 
     Event.find(query).sort()
     .then(data => {
-        res.status(200).send(data)
+        res.status(200).send({'data': data})
     })
     .catch(err => {
         res.status(500).send({
-            message:
-            err.message
+            message: err.message
         });
         return 0;
     })
@@ -243,7 +293,6 @@ exports.register = (data) => {
         let topic = ContractController.contracts[data.chainId][data.contract.toLowerCase()]
                 ?.filters[data.name]()
                 .topics[0];
-    
         Object.assign(eventRegistry, {
             _id: ethers.utils.hexConcat([
                 utils.toHex(Number(data.chainId), CONSTANTS.PADDING.CHAINID),
@@ -280,12 +329,27 @@ exports.registry = (req, res) => {
         name: req.body.name
     })
     .then(res => {
-        res.status(200).send(data)
+        res.status(200).send({'data': data})
     })
     .catch(err => {
         res.status(500).send({
             message: err.message
         });
         return 0;
+    })
+}
+
+exports.findAllRegistries = async () => {
+    return await EventRegistry.find({})   
+}
+
+exports.registerAllExisted = () => {
+    EventRegistry.find({})
+    .then(data => {
+        data.map(e => createEventListener(e));
+        return data;
+    })
+    .catch(error => {
+        throw error;
     })
 }

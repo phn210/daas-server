@@ -4,6 +4,7 @@ const config = require('../config');
 const EventController = require('./EventController');
 
 const utils = require('../utils');
+const EventRegistry = require('../models/EventRegistry');
 
 exports.providers = {};
 exports.contracts = {};
@@ -16,7 +17,6 @@ const initialize = () => {
     try {
         config.allowedChains.map(e => {
             chainInfo = getChainInfo(e);
-            
             exports.providers[e] = chainInfo.rpc.map(url => new ethers.providers['JsonRpcProvider'](url))
             exports.contracts[e] = Object.keys(config[e])
                                     .filter(elm => elm != "")
@@ -34,6 +34,12 @@ const initialize = () => {
                 address: config[e]['daofactory'].address,
                 name: 'DAOCreated'
             })
+            EventController.registerAllExisted();
+            // const eventRegistries = await EventController.findAllRegistries();
+            // eventRegistries.map(e => {
+            //     EventController.register(e)
+            //     return ;
+            // })
         })
     } catch (err) {
         throw err;
@@ -50,9 +56,8 @@ exports.getContracts = async (data) => {
         config[data.chainId].governor.interface,
         this.providers[data.chainId][0]
     )
-    await governor.getConfigs();
-    let timelocks = await governor.getTimelocks();
-    let votes = await governor.votes();
+
+    const [timelocks, votes] = await Promise.all([governor.getTimelocks(), governor.votes()]);
     
     daoContracts.governor = governor.address;
     daoContracts.timelocks = timelocks;

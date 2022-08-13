@@ -7,7 +7,7 @@ require("dotenv").config();
 const app = express();
 
 const corsOptions = {
-    origin: process.env.URL ?? 'http://localhost:5000'
+    origin: process.env.URL ?? 'http://localhost:3000'
 }
 
 app.use(cors(corsOptions));
@@ -21,7 +21,12 @@ if(process.env.NODE_ENV !== "test") {
 
 const MONGODB_URL = process.env.MONGODB_URL ?? 'mongodb://localhost:27017'
 
-mongoose.connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
+mongoose.connect(MONGODB_URL, { 
+	useNewUrlParser: true,
+	useUnifiedTopology: true ,
+	socketTimeoutMS: 30000,
+    keepAlive: true
+}).then(() => {
 	//don't show the log when it is test
 	if(process.env.NODE_ENV !== "test") {
 		console.log("Connected to %s", MONGODB_URL);

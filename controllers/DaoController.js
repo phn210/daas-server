@@ -5,7 +5,7 @@ const IpfsController = require('../controllers/IpfsController');
 const ContractController = require('../controllers/ContractController');
 
 const Dao = require('../models/Dao');
-const Following = require('../models/Following');
+const Proposal = require('../models/Proposal');
 
 const { CONSTANTS } = require('../config');
 const utils = require('../utils');
@@ -49,6 +49,7 @@ exports.update = (data) => {
         {upsert: true, new: true}
     )
     .then(data => {
+        console.log(data)
         console.log(`DAO updated ${dao._id}`);
         return data;
     })
@@ -60,7 +61,7 @@ exports.update = (data) => {
 exports.findAll = (req, res) => {
     Dao.find({})
     .then(data => {
-        res.status(200).send(data)
+        res.status(200).send({'data': data})
     })
     .catch(err => {
         res.status(500).send({
@@ -82,7 +83,7 @@ exports.findOne = (req, res) => {
 
     Dao.findById(req.params.daoId)
     .then(data => {
-        res.status(200).send(data)
+        res.status(200).send({'data': data})
     })
     .catch(err => {
         res.status(500).send({
@@ -95,7 +96,7 @@ exports.findOne = (req, res) => {
 exports.findContractsByDAO = (req, res) => {
     exports.getContracts(req.params.daoId)
     .then(data => {
-        res.status(200).send(data)
+        res.status(200).send({'data': data})
     })
     .catch(err => {
         res.status(500).send({

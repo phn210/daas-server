@@ -15,7 +15,7 @@ module.exports = [
         "rpc": [
             `https://rinkeby.infura.io/v3/${INFURA_API_KEY}`,
             "https://ethereum-rinkeby-rpc.allthatnode.com/",
-            "https://rinkeby-light.eth.linkpool.io"
+            // "https://rinkeby-light.eth.linkpool.io"
         ],
         "faucets": [
             "https://faucet.rinkeby.io"
@@ -34,12 +34,10 @@ module.exports = [
             "decimals": 18
         },
         "rpc": [
-            "https://data-seed-prebsc-1-s1.binance.org:8545",
+            // "https://nd-006-375-626.p2pify.com/7d7fc1a2b5dd8f7a51697c940dd6fe33",
             "https://data-seed-prebsc-2-s1.binance.org:8545",
             "https://data-seed-prebsc-1-s2.binance.org:8545",
-            "https://data-seed-prebsc-2-s2.binance.org:8545",
-            "https://data-seed-prebsc-1-s3.binance.org:8545",
-            "https://data-seed-prebsc-2-s3.binance.org:8545"
+            "https://data-seed-prebsc-1-s3.binance.org:8545"
         ],
         "faucets": [
             "https://testnet.binance.org/faucet-smart"
@@ -48,7 +46,7 @@ module.exports = [
         "explorer": "https://testnet.bscscan.com/"
     },
     {
-        "name": "Local chain",
+        "name": "Localhost",
         "chainId": 31337,
         "shortName": "loc",
         "networkId": 31337,

@@ -7,6 +7,22 @@ const Proposal = require('../models/Proposal');
 const { CONSTANTS } = require('../config');
 const utils = require('../utils');
 
+exports.resolveProposalId = (proposalId) => {
+    const obj = {};
+    let i = 0;
+    try {
+        if (proposalId.length != CONSTANTS.PADDING.CHAINID*2 + CONSTANTS.PADDING.ADDRESS*2 + CONSTANTS.PADDING.PROPOSALID*2+2)
+            throw {message: 'Invalid proposalId length'};
+        obj.chainId = Number(ethers.utils.hexDataSlice(proposalId, i, i+= CONSTANTS.PADDING.CHAINID));
+        obj.governor = ethers.utils.hexDataSlice(proposalId, i, i+= CONSTANTS.PADDING.ADDRESS);
+        obj.id = ethers.utils.hexDataSlice(proposalId, i, i+= CONSTANTS.PADDING.PROPOSALID);    
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+    return obj;
+}
+
 exports.update = (data) => {
     const proposal = {};
     try {
@@ -45,6 +61,28 @@ exports.update = (data) => {
     })
 }
 
+exports.findOne = async (req, res) => {
+    try {
+        exports.resolveProposalId(req.params.proposalId);
+    } catch (err) {
+        res.status(500).send({
+            message: err.message
+        });
+        return 0;
+    }
+
+    Proposal.findById(req.params.proposalId)
+    .then(data => {
+        res.status(200).send({'data': data})
+    })
+    .catch(err => {
+        res.status(500).send({
+            message: err.message
+        });
+        return 0;
+    })
+}
+
 exports.findByDAO = async (req, res) => {
     const dao = {}, query = {};
 
@@ -65,7 +103,7 @@ exports.findByDAO = async (req, res) => {
     
     Proposal.find(query).sort()
     .then(data => {
-        res.status(200).send(data)
+        res.status(200).send({'data': data})
     })
     .catch(err => {
         res.status(500).send({

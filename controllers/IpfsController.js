@@ -6,17 +6,17 @@ const IPFS_SET_URL = process.env.IPFS_SET_URL
 const INFURA_PROJECT_ID = process.env.INFURA_IPFS_ID
 const INFURA_PROJECT_SECRET = process.env.INFURA_IPFS_SECRET
 
-// exports.add = (req, res) => {
-//     addFile(req.body)
-//     .then(data => {
-//         res.status(200).send(data)
-//     }).catch(err => {
-//         res.status(500).send({
-//             message:
-//             err.message || "Some error occurred while uploading IPFS."
-//         });
-//     })
-// }
+exports.upload = (req, res) => {
+    addFile(req.body)
+    .then(data => {
+        res.status(200).send(data.data)
+    }).catch(err => {
+        res.status(500).send({
+            message:
+            err.message || "Some error occurred while uploading IPFS."
+        });
+    })
+}
 
 exports.get = (req, res) => {
     getFile(req.params.hash)

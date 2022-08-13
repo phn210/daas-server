@@ -44,6 +44,14 @@ module.exports = {
             "function upgradeAndCall(address proxy, address implementation, bytes data) payable @29000000"
         ]
     },
+    "proxyfactory": {
+        "address": "",
+        "interface": [
+            "event ProxyCreated(address proxy, address implementation)",
+            "function createProxy(address _implementation, address _admin, bytes _initializeData) payable returns (address proxy_) @29000000",
+            "function createProxyAdmin(address _owner) returns (address admin_) @29000000"
+        ]
+    },
     "governancetokenfactory": {
         "address": "",
         "interface": [

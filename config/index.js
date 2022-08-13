@@ -1,4 +1,6 @@
 exports.allowedChains = [
+    4,
+    97,
     31337
 ]
 
