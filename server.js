@@ -19,7 +19,13 @@ if(process.env.NODE_ENV !== "test") {
 	app.use(logger("dev"));
 }
 
-const MONGODB_URL = process.env.MONGODB_URL ?? 'mongodb://localhost:27017'
+app.get("/", (req, res) => {
+    res.json({ message: "Server is online." });
+});
+
+app.use("/api/", require('./routes'));
+
+const MONGODB_URL = process.env.MONGODB_URL ?? 'mongodb://localhost:27017/daas-test';
 
 mongoose.connect(MONGODB_URL, { 
 	useNewUrlParser: true,
@@ -33,21 +39,19 @@ mongoose.connect(MONGODB_URL, {
 		console.log("App is running ... \n");
 		console.log("Press CTRL + C to stop the process. \n");
 	}
+	const PORT = process.env.PORT || 5000;
+	app.listen(PORT, () => {
+		console.log(`Server is running on port ${PORT}.`);
+	});
 }).catch(err => {
     console.error("App starting error:", err.message);
     process.exit(1);
 });
 
-const db = mongoose.connection;
+// const db = mongoose.connection;
 
-app.get("/", (req, res) => {
-    res.json({ message: "Server is online." });
-});
-
-app.use("/api/", require('./routes'));
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
-});
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}.`);
+// });
 
