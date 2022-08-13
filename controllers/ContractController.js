@@ -14,6 +14,7 @@ function getChainInfo(chainId) {
 }
 
 const initialize = () => {
+    console.log("Initializing...")
     try {
         config.allowedChains.map(e => {
             chainInfo = getChainInfo(e);
