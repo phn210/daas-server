@@ -24,11 +24,11 @@ const specialEventListeners = {
     'ProposalCancelled': proposalUpdatedListener
 }
 
-exports.testEventListening = () => {
-    ContractController.providers[31337].map(provider => {
-        console.log('test', provider.listenerCount('DAOCreated'))
-    });
-}
+// exports.testEventListening = () => {
+//     ContractController.providers[31337].map(provider => {
+//         console.log('test', provider.listenerCount('DAOCreated'))
+//     });
+// }
 
 exports.testListeners = (req, res) => {
     const contract = ContractController.contracts[97]["governor"].attach("0x2Ef6DbFD41CD78C796B782a830BCB4c8A90bbC2A");
