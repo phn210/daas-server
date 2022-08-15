@@ -4,7 +4,7 @@ module.exports = {
         "explorer": "https://rinkeby.etherscan.io/"
     },
     "daofactory": {
-        "address": "0x2709f48DB1C46E8E2D8D60c2C68a390ff7387E26",
+        "address": "0x619d2F462CA1db0B6c48264D04C4cB22DABD6A61",
         "interface": [
             "event DAOBlacklisted(uint256 id)",
             "event DAOCreated(uint256 id, tuple(bytes32 infoHash, address proxyAdmin, address governor, uint8 standard, bool isRetired, bool isBlacklisted) dao)",
@@ -31,7 +31,7 @@ module.exports = {
         ]
     },
     "proxyadmin": {
-        "address": "0xA10A77C26f991f35FFd8ec499103cDdb7aC3A943",
+        "address": "0x4B91daEeC0656808bF7f5500aA8546c7C72DA979",
         "interface": [
             "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
             "function changeProxyAdmin(address proxy, address newAdmin)",
@@ -45,7 +45,7 @@ module.exports = {
         ]
     },
     "proxyfactory": {
-        "address": "0x733023f0Edc595AEdAE272210A82F2e6f946e3e6",
+        "address": "0x53ffD92b5a6f8f0F40a98b13309EA7E9DA8b1337",
         "interface": [
             "event ProxyCreated(address proxy, address implementation)",
             "function createProxy(address _implementation, address _admin, bytes _initializeData) payable returns (address proxy_)",
@@ -53,13 +53,13 @@ module.exports = {
         ]
     },
     "governancetokenfactory": {
-        "address": "0xEB728Baf0A194d093d500840177772237d2Dfb6c",
+        "address": "0x23FB0F10C94bC6676c172247f78661441F4c750e",
         "interface": [
             "function createToken(uint8 _standard, tuple(string name, string symbol, address owner, uint8 decimals, uint256 initialSupply) _initialization, address _owner) returns (address gToken_)"
         ]
     },
     "governor": {
-        "address": "0xd2dC027574E5F606c0371da7Ad8Af5E4Fee7C7Bc",
+        "address": "0x323DE9fe921bcA1846e25044531aA7eA003cd914",
         "interface": [
             "event AdminsUpdated(address[] admins)",
             "event EmergencyActions(address guardian, address timelock, tuple(address target, uint256 value, string signature, bytes data)[] actions, string description)",
@@ -119,7 +119,7 @@ module.exports = {
         ]
     },
     "timelock": {
-        "address": "0xa8050F0917B47a59eAb83ddc3979a09c25189f51",
+        "address": "0x24d05D88aebD96008a25E8eB73Cd2853867a76FA",
         "interface": [
             "event GovernorSet(address governor)",
             "event Initialized(uint8 version)",
@@ -148,7 +148,7 @@ module.exports = {
         ]
     },
     "erc20votes": {
-        "address": "0x440e868D5aF871cA52d248263B986F2F8586C5b3",
+        "address": "0xd5A8C40537254B3d51D509D518D44a0e751E9f52",
         "interface": [
             "constructor(tuple(string name, string symbol, address owner, uint8 decimals, uint256 initialSupply) _initialization)",
             "event Approval(address indexed owner, address indexed spender, uint256 value)",
@@ -182,7 +182,7 @@ module.exports = {
         ]
     },
     "erc721votes": {
-        "address": "0xFA56c7dD32ECA01c399B12AB1fDE66B9Cd9433F8",
+        "address": "0x1BA298cD021021672c1FD3D9Ea2aa2eB827B456C",
         "interface": [
             "constructor(tuple(string name, string symbol, address owner, uint8 decimals, uint256 initialSupply) _initialization)",
             "event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)",

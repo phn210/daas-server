@@ -10,6 +10,7 @@ const DaoSchema = new Schema({
     governor: {type: String},
     isRetired: {type: Boolean},
     isBlacklisted: {type: Boolean},
+    standard: {type: Boolean},
     name: {type: String},
     shortDescription: {type: String},
     logoUrl: {type: String}

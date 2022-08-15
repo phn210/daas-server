@@ -5,7 +5,7 @@ const FormData = require('form-data');
 const IpfsController = require('../controllers/IpfsController');
 
 const CHAIN_ID = 31337;
-const INDEX = 5;
+const INDEX = 2;
 
 const filePath = resolve(process.cwd(), `mocks/${CHAIN_ID}/daos/${INDEX}.json`);
 

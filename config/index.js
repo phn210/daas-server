@@ -1,7 +1,7 @@
 exports.allowedChains = [
     4,
     97,
-    31337
+    // 31337
 ]
 
 exports.chains = require('./allowedChains.js')
