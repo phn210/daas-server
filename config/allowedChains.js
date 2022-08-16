@@ -13,7 +13,7 @@ module.exports = [
             "decimals": 18
         },
         "rpc": [
-            `https://rinkeby.infura.io/v3/${INFURA_API_KEY}`,
+            `https://nd-324-694-649.p2pify.com/d6d89986f801b6240a737d1ebad1a923`,
             "https://ethereum-rinkeby-rpc.allthatnode.com/",
             // "https://rinkeby-light.eth.linkpool.io"
         ],
